@@ -2,29 +2,78 @@ import time
 import random
 import requests
 
-url = "http://ijw.hzcu.edu.cn/xsxk/zzxkyzb_cxXkTitleMsg.html?gnmkdm=N253512"
+# 目标 URL
+url = "http://ijw.hzcu.edu.cn/xsxk/zzxkyzbjk_xkBcZyZzxkYzb.html?gnmkdm=N253512"
+
+# 请求头
+headers = {
+    "Proxy-Connection": "keep-alive",
+    "X-Requested-With": "XMLHttpRequest",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                  " (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0",
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+    "Origin": "http://ijw.hzcu.edu.cn",
+    "Referer": "http://ijw.hzcu.edu.cn/xsxk/zzxkyzb_cxZzxkYzbIndex.html?doType=details&gnmkdm=N253512&layout=default",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6"
+}
+
+# Cookies
 cookies = {
-    "route": "6eff09e6c2dd246d9567fcfd5e531b9a",
-    "JSESSIONID": "7B92B99953DE8F407EE42ADB719C0C5A"
+    "route": "aaa",
+    "JSESSIONID": "aaa"
 }
-name = {
-    "09AF9D6DB3ED03CEE063BDB73D0A68A3": "中国古代陶瓷",
+
+# 课程映射（kch_id -> 课程名称，用于日志）
+course_names = {
+    "16BF9C9EFD249E1EE063BDB73D0A0EB9": "文旅",
+    # 可以继续添加其他课程
 }
+
+# 要刷选的课程列表，每个字典包含完整的表单字段
 courses = [
     {
-        "jxb_ids": "6b5e16e9180a17b1dac98ef33f03958e379ccdb73c46f655700c5ddcf765c9f6b4e9d1c13cf2468a8754d18b0303d9363c9212a337d67aee33bb10bcb9d0e5a2aa062ee85a4d729f717a5b06841bb26ccfafcd63afa4cafa02e47f798f065f26590d4a31894c190c53d59aaed81400c14805d0dccec03a8750e4667786c7ff4a",
-        "kch_id": "09AF9D6DB3ED03CEE063BDB73D0A68A3"
+        "jxb_ids": "319BE2E2E6D4BEC3E063BDB73D0A817E",
+        "kch_id": "16BF9C9EFD249E1EE063BDB73D0A0EB9",
+        "kcmc": "(D13002)文化与旅游 - 2.0 学分",
+        "rwlx": "2",
+        "rlkz": "0",
+        "cdrlkz": "0",
+        "rlzlkz": "1",
+        "sxbj": "1",
+        "xxkbj": "0",
+        "qz": "0",
+        "cxbj": "0",
+        "xkkz_id": "3737E7E5EF1B9EA6E063BDB73D0AFEFF",
+        "njdm_id": "2024",
+        "zyh_id": "20E28528D2959F63E063BDB73D0AA904",
+        "kklxdm": "10",
+        "xklc": "2",
+        "xkxnm": "2025",
+        "xkxqm": "3",
+        "jcxx_id": ""
     }
 ]
 
 if __name__ == "__main__":
+    print("开始模拟课程选课请求，按 Ctrl+C 停止...")
     while True:
         for course in courses:
             try:
-                delay = random.uniform(0, 2 / len(courses))
-                print(f"等待 {delay:.2f} 秒后发送请求...")
+                # 随机延迟，模拟人为操作
+                delay = random.uniform(0.1, 0.5)
+                print(f"等待 {delay:.2f} 秒后发送请求 for kch_id={course['kch_id']}...")
                 time.sleep(delay)
-                response = requests.post(url, data=course, cookies=cookies)
-                print(f"kch_id={name[course['kch_id']]}, 状态码: {response.status_code}, 响应内容: {response.text[:100]}")
+
+                # 发送 POST 请求
+                response = requests.post(url, data=course, headers=headers, cookies=cookies, timeout=10)
+
+                # 打印日志
+                name = course_names.get(course["kch_id"], course["kch_id"])
+                print(f"课程: {name}, 状态码: {response.status_code}, 响应: {response.text[:200]}...\n")
+
+            except requests.exceptions.RequestException as e:
+                print(f"请求课程 {course['kch_id']} 时发生网络错误: {e}")
             except Exception as e:
-                print(f"请求 kch_id={course['kch_id']} 时发生错误: {e}")
+                print(f"处理课程 {course['kch_id']} 时发生错误: {e}")
