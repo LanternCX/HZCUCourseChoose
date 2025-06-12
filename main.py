@@ -25,12 +25,6 @@ cookies = {
     "JSESSIONID": "aaa"
 }
 
-# 课程映射（kch_id -> 课程名称，用于日志）
-course_names = {
-    "16BF9C9EFD249E1EE063BDB73D0A0EB9": "文旅",
-    # 可以继续添加其他课程
-}
-
 # 要刷选的课程列表，每个字典包含完整的表单字段
 courses = [
     {
@@ -70,8 +64,7 @@ if __name__ == "__main__":
                 response = requests.post(url, data=course, headers=headers, cookies=cookies, timeout=10)
 
                 # 打印日志
-                name = course_names.get(course["kch_id"], course["kch_id"])
-                print(f"课程: {name}, 状态码: {response.status_code}, 响应: {response.text[:200]}...\n")
+                print(f"课程: {course['kcmc']}, 状态码: {response.status_code}, 响应: {response.text[:200]}...\n")
 
             except requests.exceptions.RequestException as e:
                 print(f"请求课程 {course['kch_id']} 时发生网络错误: {e}")
