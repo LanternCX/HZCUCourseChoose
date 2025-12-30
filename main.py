@@ -1,19 +1,19 @@
-import random
 import time
-
+import random
 import requests
+import json
 
 # 目标 URL
 url = "http://ijw.hzcu.edu.cn/xsxk/zzxkyzbjk_xkBcZyZzxkYzb.html?gnmkdm=N253512"
 
-# 1. 独立的 Cookies 字典
+# 1. Cookies
 cookies = {
-    "JWTUser": "",
-    "route": "",
-    "JSESSIONID": ""
+    "JWTUser": "aaa",
+    "route": "aaa",
+    "JSESSIONID": "aaa"
 }
 
-# 2. 完全模拟的请求头
+# 2. 完全模拟请求头
 headers = {
     "Accept": "application/json, text/javascript, */*; q=0.01",
     "Accept-Encoding": "gzip, deflate",
@@ -27,75 +27,77 @@ headers = {
     "X-Requested-With": "XMLHttpRequest"
 }
 
-# 3. 完整的表单数据 (19个字段)
-course_data = {
-    "jxb_ids": "44DC4E8E055B53CFE063BDB73D0AB680",
-    "kch_id": "0CFD1C4DBD881470E063BDB73D0A03EE",
-    "kcmc": "(D70023)羽毛球Ⅰ - 1.0 学分",
-    "rwlx": "2",
-    "rlkz": "0",
-    "cdrlkz": "0",
-    "rlzlkz": "1",
-    "sxbj": "1",
-    "xxkbj": "0",
-    "qz": "0",
-    "cxbj": "0",
-    "xkkz_id": "47175FFFE77389A2E063BDB73D0A1EDF",
-    "njdm_id": "2024",
-    "zyh_id": "0121",
-    "kklxdm": "05",
-    "xklc": "2",
-    "xkxnm": "2025",
-    "xkxqm": "12",
-    "jcxx_id": ""
-}
+# 3. 待选课程列表
+courses_to_snatch = [
+    {
+        "name": "创新创业基础",
+        "data": {
+            "jxb_ids": "42A6749D33584CD3E063BDB73D0A956E",
+            "kch_id": "E00031",
+            "kcmc": "(E00031)创新创业基础 - 2.0 学分",
+            "rwlx": "2",
+            "rlkz": "0",
+            "cdrlkz": "0",
+            "rlzlkz": "1",
+            "sxbj": "1",
+            "xxkbj": "0",
+            "qz": "0",
+            "cxbj": "0",
+            "xkkz_id": "47175FFFE58189A2E063BDB73D0A1EDF",
+            "njdm_id": "2024",
+            "zyh_id": "0121",
+            "kklxdm": "10",
+            "xklc": "2",
+            "xkxnm": "2025",
+            "xkxqm": "12",
+            "jcxx_id": ""
+        }
+    }
+]
 
 
-def run_task():
-    # 使用 Session 管理会话
+def snatch_with_json():
+    print(f"🔥开始抢课🔥")
+
     session = requests.Session()
+    # 将字典形式的 cookies 注入到 session 中
     session.cookies.update(cookies)
 
     attempt = 1
     while True:
-        try:
-            # 随机延迟，避免被系统识别为异常流量
-            wait_time = random.uniform(0.2, 0.5)
-            time.sleep(wait_time)
+        for course in courses_to_snatch:
+            try:
+                # 发送 POST 请求，Content-Length 会由 requests 自动计算
+                response = session.post(url, data=course["data"], headers=headers, timeout=5)
 
-            # 发送 POST 请求
-            response = session.post(
-                url,
-                data=course_data,
-                headers=headers,
-                timeout=10
-            )
+                now = time.strftime("%H:%M:%S", time.localtime())
+                print(f"[{now}] 轮次:{attempt} | 课程:{course['name']} | 状态码:{response.status_code}")
 
-            now = time.strftime("%H:%M:%S", time.localtime())
+                if response.status_code == 200:
+                    try:
+                        result_json = response.json()
+                        print(f"JSON 响应: {json.dumps(result_json, ensure_ascii=False)}")
 
-            # 打印关键日志
-            print(f"[{now}] 第 {attempt} 次尝试 | 状态码: {response.status_code}")
-            print(f"响应内容: {response.text[:100]}...")
+                        # 如果教务系统返回特定的“抢课成功”标识，可以这里增加 break
+                        if result_json.get("flag") == "1":
+                            print("🎉 恭喜！抢课成功！")
+                            # return
 
-            # 业务逻辑判断
-            if "成功" in response.text:
-                print("🎉 抢课成功！正在退出...")
-                break
-            elif "重复" in response.text:
-                print("🔔 提示：已选过该课或正在处理中。")
-            elif "非法" in response.text or "登录" in response.text:
-                print("❌ 警告：Cookie 可能已过期，请重新获取。")
-                break
+                    except Exception:
+                        print(f"原始响应: {response.text[:100].strip()}")
+                else:
+                    print(f"请求失败，响应体: {response.text[:50]}")
 
-            attempt += 1
+                # 随机间隔 0.5 到 1 秒，防止被服务器识别为机器人
+                time.sleep(random.uniform(0.1, 0.5))
 
-        except requests.exceptions.RequestException as e:
-            print(f"❌ 网络异常: {e}")
-            time.sleep(1)
-        except Exception as e:
-            print(f"❌ 运行错误: {e}")
-            break
+            except Exception as e:
+                print(f"⚠️ 网络连接异常: {e}")
+                time.sleep(1)
+
+        print("-" * 60)
+        attempt += 1
 
 
 if __name__ == "__main__":
-    run_task()
+    snatch_with_json()
