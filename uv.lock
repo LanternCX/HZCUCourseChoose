@@ -117,7 +117,7 @@ wheels = [
 ]
 
 [[package]]
-name = "hzcucoursechoose"
+name = "course"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
